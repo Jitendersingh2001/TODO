@@ -1,4 +1,5 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
+from urllib.parse import quote_plus
 
 class AppSettings(BaseSettings):
     APP_NAME: str
@@ -15,17 +16,14 @@ class DatabaseSettings(BaseSettings):
     DB_PASSWORD: str
 
     @property
-    def URL(self) -> str:
-        """Return full SQLAlchemy database URL."""
-        return (
-            f"{self.DB_CONNECTION}+pymysql://{self.DB_USERNAME}:"
-            f"{self.DB_PASSWORD}@{self.DB_HOST}:"
-            f"{self.DB_PORT}/{self.DB_DATABASE}"
-        )
+    def DB_DATABASE_URL(self) -> str:
+        # URL encode the password
+        password = quote_plus(self.DB_PASSWORD)
+        return f"{self.DB_CONNECTION}+pymysql://{self.DB_USERNAME}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
 
 class Settings(BaseSettings):
-    app: AppSettings = AppSettings()
-    db: DatabaseSettings = DatabaseSettings()
+    app: AppSettings
+    db: DatabaseSettings
 
     class Config:
         env_file = ".env"
