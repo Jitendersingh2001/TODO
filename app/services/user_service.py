@@ -4,7 +4,8 @@ from app.schemas.user import UserCreate
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
-from app.constants.message import UserMessages, DBMessages
+from app.constants.message import UserMessages, DBMessages, AuthMessages
+from app.utils.helper import create_access_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -60,4 +61,6 @@ class UserService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=UserMessages.INVALID_CREDENTIALS
             )
-        return user
+        else:
+            token = create_access_token(data={"sub": user.email})
+            return {"message": AuthMessages.LOGGED_IN , "token": token, "token_type": "bearer"}
