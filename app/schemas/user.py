@@ -18,4 +18,4 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True  # allows SQLAlchemy model → Pydantic conversion
+        from_attributes = True  # Enable ORM mode
