@@ -1,7 +1,5 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import List, Optional
-
 
 # Request schema (for creating a user)
 class UserCreate(BaseModel):
@@ -9,6 +7,10 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+# Request schema for login
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 # Response schema (for returning user info)
 class UserResponse(BaseModel):
