@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Poetry
+poetry.lock
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Others
+*.sqlite3
+*.db
+*.bak
+
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# Misc
+*.swp
+*.swo
