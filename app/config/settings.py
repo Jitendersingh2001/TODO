@@ -21,9 +21,16 @@ class DatabaseSettings(BaseSettings):
         password = quote_plus(self.DB_PASSWORD)
         return f"{self.DB_CONNECTION}+pymysql://{self.DB_USERNAME}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
 
+
+class JWTSettings(BaseSettings):
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
 class Settings(BaseSettings):
     app: AppSettings
     db: DatabaseSettings
+    jwt: JWTSettings
 
     class Config:
         env_file = ".env"
