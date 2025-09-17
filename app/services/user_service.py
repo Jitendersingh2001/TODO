@@ -4,7 +4,7 @@ from app.schemas.user import UserCreate
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
-from app.constants.message import UserMessages, DBMessages, AuthMessages
+from app.constants.message import Messages
 from app.utils.helper import create_access_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -22,7 +22,7 @@ class UserService:
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=UserMessages.EXISTS
+                    detail=Messages.EXISTS
                 )
             
             # Hash the password before storing it
@@ -42,7 +42,13 @@ class UserService:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=DBMessages.ERROR
+                detail=Messages.ERROR
+            )
+        except Exception as e:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=Messages.SOMETHING_WENT_WRONG
             )
 
     # Private method to hash passwords
@@ -55,12 +61,25 @@ class UserService:
     
     # function to authenticate user during login
     def authenticate_user(self, email: str, password: str):
-        user = self.db.query(User).filter(User.email == email).first()
-        if not user or not self._verify_password(password, user.password):
+        try:
+            user = self.db.query(User).filter(User.email == email).first()
+            if not user or not self._verify_password(password, user.password):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=Messages.INVALID_CREDENTIALS
+                )
+            else:
+                token = create_access_token(data={"sub": user.email})
+                return {"message": Messages.LOGGED_IN , "token": token, "token_type": "bearer"}
+        except SQLAlchemyError as e:
+            self.db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=UserMessages.INVALID_CREDENTIALS
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=Messages.ERROR
             )
-        else:
-            token = create_access_token(data={"sub": user.email})
-            return {"message": AuthMessages.LOGGED_IN , "token": token, "token_type": "bearer"}
+        except Exception as e:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=Messages.SOMETHING_WENT_WRONG
+            )
