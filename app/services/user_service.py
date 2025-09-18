@@ -5,9 +5,10 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
 from app.constants.message import Messages
-from app.utils.helper import create_access_token
+from app.utils.auth import create_access_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 class UserService:
     def __init__(self, db: Session):
@@ -17,17 +18,17 @@ class UserService:
     def create_user(self, user: UserCreate) -> User:
         try:
             # Check if the user already exists
-            existing_user = self.db.query(User).filter(User.email == user.email).first()
+            existing_user = self.db.query(User).filter(
+                User.email == user.email).first()
 
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=Messages.EXISTS
                 )
-            
-            # Hash the password before storing it
-            hashed_password = self._hash_password(user.password) 
 
+            # Hash the password before storing it
+            hashed_password = self._hash_password(user.password)
 
             new_user = User(
                 username=user.username,
@@ -58,7 +59,7 @@ class UserService:
     # Private method to verify passwords
     def _verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return pwd_context.verify(plain_password, hashed_password)
-    
+
     # function to authenticate user during login
     def authenticate_user(self, email: str, password: str):
         try:
@@ -69,8 +70,9 @@ class UserService:
                     detail=Messages.INVALID_CREDENTIALS
                 )
             else:
-                token = create_access_token(data={"sub": user.email})
-                return {"message": Messages.LOGGED_IN , "token": token, "token_type": "bearer"}
+                token = create_access_token(
+                    data={"sub": user.email, "username": user.username, "user_id": user.id})
+                return {"message": Messages.LOGGED_IN, "token": token, "token_type": "bearer"}
         except SQLAlchemyError as e:
             self.db.rollback()
             raise HTTPException(
